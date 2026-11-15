@@ -6,7 +6,7 @@ CONFIG += c++11
 
 HEADERS += \
     src/SAL/AudioPlayer.h \
-    src/SAL/EyeDisplay.h \
+    src/SAL/EmotionDisplay.h \
     src/SAL/SmoothMotion.h \
     src/SAL/Button.h \
     src/SAL/ApplicationController.h \
@@ -20,7 +20,7 @@ HEADERS += \
 SOURCES += \
     main.cpp \
     src/SAL/AudioPlayer.cpp \
-    src/SAL/EyeDisplay.cpp \
+    src/SAL/EmotionDisplay.cpp \
     src/SAL/SmoothMotion.cpp \
     src/SAL/Button.cpp \
     src/SAL/ApplicationController.cpp \

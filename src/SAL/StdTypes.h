@@ -26,6 +26,7 @@
 #define M_PI 3.14159265358979323846
 #endif
 
+#define MOTION_INIT_VALUE 0.0f
 typedef enum {
     EMOTION_START_UP,
     EMOTION_IDLE,
@@ -33,6 +34,12 @@ typedef enum {
     EMOTION_ANGRY,
     EMOTION_TICKLED,
     EMOTION_SUPPRISED
+} EMOTION;
+
+typedef enum {
+    EMOTION_TASK_INIT,
+    EMOTION_TASK_PENDING,
+    EMOTION_TASK_DONE,
 } EMOTION_STATE;
 
 typedef enum {
@@ -41,6 +48,20 @@ typedef enum {
     MOTION_INPROGRESS,
     MOTION_DONE,
 } MOTION_STATE;
+
+typedef enum {
+    DISPLAY_IDLE,
+    DISPLAY_INIT,
+    DISPLAY_INPROGRESS,
+    DISPLAY_DONE,
+} DISPLAY_STATE;
+
+typedef enum {
+    AUDIO_PLAYER_IDLE,
+    AUDIO_PLAYER_INIT,
+    AUDIO_PLAYER_INPROGRESS,
+    AUDIO_PLAYER_DONE,
+} AUDIO_PLAYER_STATE;
 
 typedef enum {
     MOTOR_HEAD,
@@ -76,11 +97,10 @@ typedef struct {
     int y;
     int width;
     int height;
-} EyeParam;
+} DisplayParam;
 
 typedef struct {
-    ServoParam servoLst[MAX_MOTOR];
-    EyeParam eyeLst[MAX_EYE];
-} Move;
+    char audioFile[128];
+} AudioParam;
 
 #endif // STDTYPES_H

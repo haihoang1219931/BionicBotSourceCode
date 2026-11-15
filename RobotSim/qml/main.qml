@@ -6,7 +6,7 @@ import diy 1.0
 ApplicationWindow {
     id: root
     width: 860
-    height: 560
+    height: 660
     visible: true
     title: "Eilik Z-Axis (Yaw) Servo Simulator"
     color: "#1b1d23"
@@ -14,15 +14,15 @@ ApplicationWindow {
     // --- 4 Servo Angle Properties (in degrees) ---
     property real servoHead: 0       // Head yaw turn (-45 to +45 deg)
     property real servoBody: 0       // Body yaw turn (-35 to +35 deg)
-    property real servoLeftArm: 15   // Left arm swing (0 to 150 deg)
-    property real servoRightArm: -15 // Right arm swing (-150 to 0 deg)
+    property real servoLeftArm: 0   // Left arm swing (0 to 150 deg)
+    property real servoRightArm: 0 // Right arm swing (0 to 150 deg)
 
     // --- Single Function to Update All Servo Angles ---
     function updateServoAngles(head, body, leftArm, rightArm) {
         root.servoHead = Math.max(-45, Math.min(45, head))
         root.servoBody = Math.max(-35, Math.min(35, body))
         root.servoLeftArm = Math.max(0, Math.min(150, leftArm))
-        root.servoRightArm = Math.max(-150, Math.min(0, rightArm))
+        root.servoRightArm = Math.max(0, Math.min(150, servoRightArm))
     }
 
     // Smooth servo motor easing
@@ -88,7 +88,7 @@ ApplicationWindow {
                 x: 202 - Math.sin(root.servoBody * Math.PI / 180) * 18
                 y: 165
                 transformOrigin: Item.Top
-                rotation: root.servoRightArm
+                rotation: -root.servoRightArm
             }
 
             // Torso Shell
@@ -152,41 +152,75 @@ ApplicationWindow {
     }
 
     // --- Control Buttons Calling updateServoAngles(head, body, leftArm, rightArm) ---
-    RowLayout {
-        anchors.bottom: parent.bottom
-        anchors.horizontalCenter: parent.horizontalCenter
-        anchors.bottomMargin: 25
-        spacing: 10
+    ColumnLayout {
+        RowLayout {
+            anchors.horizontalCenter: parent.horizontalCenter
+            anchors.bottomMargin: 25
+            spacing: 10
 
-        Button {
-            text: "Center"
-            onClicked: root.updateServoAngles(0, 0, 15, -15)
+            Button {
+                text: "Center"
+                onClicked: root.updateServoAngles(0, 0, 15, -15)
+            }
+            Button {
+                text: "Turn Left"
+                onClicked: root.updateServoAngles(-35, -25, 30, -15)
+            }
+            Button {
+                text: "Turn Right"
+                onClicked: root.updateServoAngles(35, 25, 15, -30)
+            }
+            Button {
+                text: "Left Arm"
+                onClicked: root.updateServoAngles(0, 0, 90, 0)
+            }
+            Button {
+                text: "Right Arm"
+                onClicked: root.updateServoAngles(0, 0, 0, -90)
+            }
+            Button {
+                text: "Head Scan"
+                onClicked: root.updateServoAngles(42, -15, 95, -95)
+            }
         }
-        Button {
-            text: "Turn Left"
-            onClicked: root.updateServoAngles(-35, -25, 30, -15)
-        }
-        Button {
-            text: "Turn Right"
-            onClicked: root.updateServoAngles(35, 25, 15, -30)
-        }
-        Button {
-            text: "Left Arm"
-            onClicked: root.updateServoAngles(0, 0, 90, 0)
-        }
-        Button {
-            text: "Right Arm"
-            onClicked: root.updateServoAngles(0, 0, 0, -90)
-        }
-        Button {
-            text: "Head Scan"
-            onClicked: root.updateServoAngles(42, -15, 95, -95)
+        RowLayout {
+            anchors.horizontalCenter: parent.horizontalCenter
+            anchors.bottomMargin: 25
+            spacing: 10
+
+            Button {
+                text: "Start Up"
+                onClicked: mainProcess.changeEmotion(0)
+            }
+            Button {
+                text: "Idle"
+                onClicked: mainProcess.changeEmotion(1)
+            }
+            Button {
+                text: "Happy"
+                onClicked: mainProcess.changeEmotion(2)
+            }
+            Button {
+                text: "Angry"
+                onClicked: mainProcess.changeEmotion(3)
+            }
+            Button {
+                text: "Tickled"
+                onClicked: mainProcess.changeEmotion(4)
+            }
+            Button {
+                text: "Supprised"
+                onClicked: mainProcess.changeEmotion(5)
+            }
         }
     }
     MainProcess {
         id: mainProcess
-        onReadyToUpdate: {
-            mainProcess.updateScreen();
+        onListAngleChanged: {
+            root.updateServoAngles(listAngle[0],
+                                   listAngle[1],
+                                   listAngle[2],
+                                   listAngle[3]);
         }
     }
     Component.onCompleted: {

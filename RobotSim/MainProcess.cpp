@@ -3,6 +3,7 @@
 #include "HardwareTimerSim.h"
 #include "VideoDisplay/VideoRender.h"
 #include "../src/SAL/SmoothMotion.h"
+#include "../src/SAL/StdTypes.h"
 #include <stdio.h>
 MainProcess::MainProcess(QObject *parent) :
     QObject(parent)
@@ -29,6 +30,11 @@ MainProcess::~MainProcess()
     stopService();
 }
 
+void MainProcess::changeEmotion(int emotion)
+{
+    m_application->setState((EMOTION_STATE)emotion);
+}
+
 void MainProcess::enableHardwareTimer(bool enable)
 {
     m_hardwareTimer->enableTaskMotion(enable);
@@ -45,19 +51,14 @@ void MainProcess::pause(bool pause){
 
 void MainProcess::syncRobot()
 {
-    float listArmLength[MAX_MOTOR];
-
-    float listAngle[MAX_MOTOR];
-    int numMotor = MAX_MOTOR;
-    printf("numMotor[%d]\r\n",numMotor);
-    for(int i=0; i< numMotor; i++)
+    for(int i=0; i< (int)MAX_MOTOR; i++)
     {
-        m_listAngle[i] = listAngle[i];
+        m_listAngle[i] = m_application->currentAngle((MOTOR)(i));
         printf("m_listAngle[%d] %f\r\n",
                i,m_listAngle[i].toFloat());
     }
 
-    Q_EMIT listAngleChanged();
+    Q_EMIT listAngleChanged(m_listAngle);
 }
 
 void MainProcess::taskLoop() {
@@ -96,6 +97,7 @@ void MainProcess::updateScreen() {
         m_renderData[13*width+115] = 255;
         m_render->handleNewFrame(m_renderData, width, height);
     }
+    syncRobot();
 }
 void MainProcess::changeSleepTime(int sleepTime)
 {
@@ -110,11 +112,6 @@ void MainProcess::changeTimerPeriodMotion(int sleepTime)
 void MainProcess::changeTimerPeriodInput(int sleepTime)
 {
     m_hardwareTimer->setIntervalInput(sleepTime);
-}
-
-QVariantList MainProcess::listAngle()
-{
-    return m_listAngle;
 }
 
 void MainProcess::setListAngle(int motorID, float angle)

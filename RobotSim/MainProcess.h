@@ -14,20 +14,19 @@ class VideoRender;
 class MainProcess : public QObject
 {
     Q_OBJECT
-    Q_PROPERTY(QVariantList listAngle READ listAngle NOTIFY listAngleChanged)
 public:
     explicit MainProcess(QObject *parent = nullptr);
     ~MainProcess();
-
-    QVariantList listAngle();
     void syncRobot();
+
+public:
+    Q_INVOKABLE void changeEmotion(int emotion);
 
 public Q_SLOTS:
     void setListAngle(int motorID, float angle);
 
 Q_SIGNALS:
-    void readyToUpdate();
-    void listAngleChanged();
+    void listAngleChanged(QVariantList listAngle);
 
 public Q_SLOTS:
     void taskLoop();

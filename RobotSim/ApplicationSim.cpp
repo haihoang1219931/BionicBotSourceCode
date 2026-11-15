@@ -78,3 +78,8 @@ void ApplicationSim::enableHardwareTimer(bool enable)
 {
     m_mainProcess->enableHardwareTimer(enable);
 }
+
+void ApplicationSim::enableMotor(MOTOR motorID, bool enable)
+{
+
+}

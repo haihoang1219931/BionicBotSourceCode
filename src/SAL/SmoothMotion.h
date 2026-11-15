@@ -5,17 +5,21 @@
 class ApplicationController;
 class SmoothMotion {
   public:
-    SmoothMotion(uint8_t id, ApplicationController* app);
-    void init();
-    void changeStateControl(MOTION_STATE newState);
-    
-  public:
+    SmoothMotion(MOTOR id, ApplicationController* app);
+    void initMotion();
+    void setEmotionState(float targetAngle,
+                         float speed);
+    MOTION_STATE currentState();
+    MOTION_STATE motionMainFuntion();
+    float currentAngle();
+private:
     ApplicationController* m_app;
-    int m_targetStep;
-    int m_targetDirection;
+    ServoParam m_currentParam;
+    ServoParam m_targetParam;
 
-    uint8_t m_id;
-    MOTION_STATE m_state;
+    MOTION_STATE m_motionState;
+
+    MOTOR m_id;
 };
 
 #endif // SMOOTHMOTION_H

@@ -5,7 +5,7 @@
 
 class Button;
 class SmoothMotion;
-class EyeDisplay;
+class EmotionDisplay;
 class AudioPlayer;
 
 class ApplicationController
@@ -15,23 +15,36 @@ public:
     virtual ~ApplicationController();
     
     void loop();
-    EMOTION_STATE state();
-    void setState(EMOTION_STATE state);
+    EMOTION currentEmotion();
+    void setEmotion(EMOTION emotion);
     virtual void initRobot() = 0;
     virtual int printf(const char *fmt, ...) = 0;
     virtual void msleep(int millis) = 0;
     virtual long getSystemTime() = 0;
     virtual void enableHardwareTimer(bool enable) = 0;
+    virtual void enableMotor(MOTOR motorID, bool enable) = 0;
+    virtual void lcdClearScreen() = 0;
+    virtual void lcdDrawPixel(int x, int y) = 0;
+    virtual void lcdDrawLine(int startX, int startY, int endX, int endY) = 0;
+    virtual void lcdFillRect(int x, int y, int width, int height) = 0;
+    float currentAngle(MOTOR motorID);
     void executeMotionLoop(MOTOR motorID);
     void executeAudioLoop();
     void executeOledLoop();
     void executeInputLoop();
 
-public:
-    EMOTION_STATE m_state;
+private:
+    EMOTION_STATE emotionStartupTask();
+    EMOTION_STATE emotionHappyTask();
+    EMOTION_STATE emotionAngryTask();
+    EMOTION_STATE emotionTickledTask();
+    EMOTION_STATE emotionSupprisedTask();
+
+    EMOTION m_currentEmotion;
+    EMOTION_STATE m_emotionState;
     Button* m_touchList[MAX_TOUCH];
     SmoothMotion* m_motionList[MAX_MOTOR];
-    EyeDisplay* m_eyeDisplay;
+    EmotionDisplay* m_emotionDisplay;
     AudioPlayer* m_audioPlayer;
     int m_appTimer;
 };

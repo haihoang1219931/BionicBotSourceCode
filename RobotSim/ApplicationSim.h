@@ -13,6 +13,7 @@ public:
     void msleep(int millis) override;
     long getSystemTime() override;
     void enableHardwareTimer(bool enable) override;
+    void enableMotor(MOTOR motorID, bool enable) override;
 private:
     MainProcess* m_mainProcess;
     char m_command[MAX_COMMAND_LENGTH];
