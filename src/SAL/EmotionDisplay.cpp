@@ -1,7 +1,10 @@
 #include "EmotionDisplay.h"
+#include "LCDLibrary.h"
 
-EmotionDisplay::EmotionDisplay(ApplicationController* app):
-    m_app(app)
+EmotionDisplay::EmotionDisplay(ApplicationController* app, int width, int height):
+    m_app(app),
+    m_width(width),
+    m_height(height)
 {
 
 }
@@ -14,6 +17,21 @@ void EmotionDisplay::setState(DISPLAY_STATE state)
 DISPLAY_STATE EmotionDisplay::currentState()
 {
     return m_displayState;
+}
+
+int EmotionDisplay::getScreenWidth()
+{
+    return m_width;
+}
+
+int EmotionDisplay::getScreenHeight()
+{
+    return m_height;
+}
+
+unsigned char* EmotionDisplay::getScreenData()
+{
+    return m_frameData;
 }
 
 DISPLAY_STATE EmotionDisplay::displayMainFuntion() {

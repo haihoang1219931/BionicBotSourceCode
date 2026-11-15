@@ -23,15 +23,17 @@ public:
     virtual long getSystemTime() = 0;
     virtual void enableHardwareTimer(bool enable) = 0;
     virtual void enableMotor(MOTOR motorID, bool enable) = 0;
-    virtual void lcdClearScreen() = 0;
-    virtual void lcdDrawPixel(int x, int y) = 0;
-    virtual void lcdDrawLine(int startX, int startY, int endX, int endY) = 0;
-    virtual void lcdFillRect(int x, int y, int width, int height) = 0;
+    int getScreenWidth();
+    int getScreenHeight();
+    unsigned char* getScreenData();
     float currentAngle(MOTOR motorID);
     void executeMotionLoop(MOTOR motorID);
     void executeAudioLoop();
     void executeOledLoop();
     void executeInputLoop();
+
+protected:
+    int m_appTimer;
 
 private:
     EMOTION_STATE emotionStartupTask();
@@ -46,7 +48,7 @@ private:
     SmoothMotion* m_motionList[MAX_MOTOR];
     EmotionDisplay* m_emotionDisplay;
     AudioPlayer* m_audioPlayer;
-    int m_appTimer;
+
 };
 
 #endif // APPLICATIONCONTROLLER_H

@@ -9,6 +9,8 @@
 #include <math.h>
 
 #define ROBOT_VERSION "1.0.0"
+#define DISPLAY_WIDTH 128
+#define DISPLAY_HEIGH 64
 ApplicationController::ApplicationController()
 {
     for(int i=0; i< (int)MAX_TOUCH; i++) {
@@ -17,7 +19,7 @@ ApplicationController::ApplicationController()
     for(int i=0; i< (int)MAX_MOTOR; i++) {
         m_motionList[i] = new SmoothMotion((MOTOR)i, this);
     }
-    m_emotionDisplay = new EmotionDisplay(this);
+    m_emotionDisplay = new EmotionDisplay(this, DISPLAY_WIDTH, DISPLAY_HEIGH);
     m_audioPlayer = new AudioPlayer(this);
     m_currentEmotion = EMOTION_START_UP;
 }
@@ -216,6 +218,21 @@ void ApplicationController::setEmotion(EMOTION emotion) {
         this->printf("APP STATE: %d\r\n",m_state);
 #endif
     }
+}
+
+int ApplicationController::getScreenWidth()
+{
+    return m_emotionDisplay->getScreenWidth();
+}
+
+int ApplicationController::getScreenHeight()
+{
+    return m_emotionDisplay->getScreenHeight();
+}
+
+unsigned char* ApplicationController::getScreenData()
+{
+    return m_emotionDisplay->getScreenData();
 }
 
 float ApplicationController::currentAngle(MOTOR motorID) {

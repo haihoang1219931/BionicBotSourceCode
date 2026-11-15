@@ -2,7 +2,7 @@
 #include "ApplicationSim.h"
 #include "HardwareTimerSim.h"
 #include "VideoDisplay/VideoRender.h"
-#include "../src/SAL/SmoothMotion.h"
+#include "../src/SAL/ApplicationController.h"
 #include "../src/SAL/StdTypes.h"
 #include <stdio.h>
 MainProcess::MainProcess(QObject *parent) :
@@ -32,7 +32,7 @@ MainProcess::~MainProcess()
 
 void MainProcess::changeEmotion(int emotion)
 {
-    m_application->setState((EMOTION_STATE)emotion);
+    m_application->setEmotion((EMOTION)emotion);
 }
 
 void MainProcess::enableHardwareTimer(bool enable)
@@ -84,18 +84,44 @@ void MainProcess::setRender(VideoRender* render)
 void MainProcess::updateScreen() {
     if(m_render != nullptr)
     {
-        int width = 128;
-        int height = 64;
-        memset(m_renderData,0,width*height);
-        m_renderData[12*width+15] = 255;
-        m_renderData[12*width+16] = 255;
-        m_renderData[13*width+15] = 255;
-        m_renderData[13*width+16] = 255;
-        m_renderData[12*width+114] = 255;
-        m_renderData[12*width+115] = 255;
-        m_renderData[13*width+114] = 255;
-        m_renderData[13*width+115] = 255;
-        m_render->handleNewFrame(m_renderData, width, height);
+        int width = m_application->getScreenWidth();
+        int height = m_application->getScreenHeight();
+        unsigned char* binaryFrame = m_application->getScreenData();
+#ifdef DEBUG
+        printf("BinaryFrame:\r\n");
+        for(int row = 0; row < height; row++) {
+            for(int col = 0; col < width/8; col ++) {
+                printf(BYTE_TO_BINARY_PATTERN "",BYTE_TO_BINARY (binaryFrame[row*width/8+col]));
+            }
+            printf("\r\n");
+        }
+        printf("\r\n");
+        printf("RenderFrame:\r\n");
+#endif
+        int sRow = 8; int sCol = 8;
+        for(int row = 0; row < height; row++) {
+            for(int col = 0; col < width/8; col ++) {
+                for(int bit = 0; bit <8; bit++){
+                    // pixel value from
+                    // (row * sRow, (col*8+bit)*sCol)
+                    // to
+                    // ((row+1) * sRow-1, (col*8+bit)*sCol-1)
+                    unsigned char pixelValue = (binaryFrame[row*width/8+col] & (0x01 << (7-bit))) == 0 ? 0 : 50;
+
+                    for(int subRow = 0; subRow < sRow-1; subRow++) {
+                        for(int subCol = 0; subCol < sCol-1; subCol ++) {
+                            m_renderData[(row * sRow + subRow)* width * sCol + ((col*8 + bit)*sCol + subCol)] = pixelValue;
+                        }
+                    }
+
+                }
+
+            }
+#ifdef DEBUG
+            printf("\r\n");
+#endif
+        }
+        m_render->handleNewFrame(m_renderData, width*sRow, height*sCol);
     }
     syncRobot();
 }

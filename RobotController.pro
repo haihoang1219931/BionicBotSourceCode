@@ -5,6 +5,7 @@ QT += qml quick qml
 CONFIG += c++11
 
 HEADERS += \
+    src/SAL/LCDLibrary.h \
     src/SAL/AudioPlayer.h \
     src/SAL/EmotionDisplay.h \
     src/SAL/SmoothMotion.h \
@@ -19,6 +20,7 @@ HEADERS += \
 
 SOURCES += \
     main.cpp \
+    src/SAL/LCDLibrary.cpp \
     src/SAL/AudioPlayer.cpp \
     src/SAL/EmotionDisplay.cpp \
     src/SAL/SmoothMotion.cpp \
