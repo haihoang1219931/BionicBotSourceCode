@@ -1,3 +1,4 @@
+#include "ApplicationController.h"
 #include "EmotionDisplay.h"
 #include "LCDLibrary.h"
 
@@ -46,6 +47,7 @@ unsigned char* EmotionDisplay::getScreenData()
 
 DISPLAY_STATE EmotionDisplay::displayMainFuntion()
 {
+    // m_app->printf("oled ds[%d] ai[%d]\r\n",m_displayState,m_animFrameIndex);
     DISPLAY_STATE currentState = m_displayState;
     switch (m_currentEmotion) {
     case EMOTION_START_UP: {

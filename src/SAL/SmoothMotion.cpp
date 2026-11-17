@@ -1,15 +1,15 @@
 #include "SmoothMotion.h"
 #include "ApplicationController.h"
 #include <math.h>
-#if defined(DEBUG_COMMAND)
-#include "../ApplicationArduino.h"
-extern ApplicationArduino app;
+#ifndef abs
+#define abs(x) ((x) > 0 ? (x) : -(x))
 #endif
 SmoothMotion::SmoothMotion(MOTOR id, ApplicationController* app):
     m_app(app),
     m_motionState(MOTION_INIT),
     m_id(id)
 {
+    initMotion();
 }
 
 void SmoothMotion::initMotion()

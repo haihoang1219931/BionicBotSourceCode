@@ -1,4 +1,4 @@
-.vscode/*
 .theia/*
 *.pro.*
 build/*
+RobotESP/build/*
