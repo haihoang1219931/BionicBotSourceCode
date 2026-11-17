@@ -54,10 +54,8 @@ void MainProcess::syncRobot()
     for(int i=0; i< (int)MAX_MOTOR; i++)
     {
         m_listAngle[i] = m_application->currentAngle((MOTOR)(i));
-        printf("m_listAngle[%d] %f\r\n",
-               i,m_listAngle[i].toFloat());
+//        printf("m_listAngle[%d] %f\r\n",i,m_listAngle[i].toFloat());
     }
-
     Q_EMIT listAngleChanged(m_listAngle);
 }
 
@@ -106,7 +104,7 @@ void MainProcess::updateScreen() {
                     // (row * sRow, (col*8+bit)*sCol)
                     // to
                     // ((row+1) * sRow-1, (col*8+bit)*sCol-1)
-                    unsigned char pixelValue = (binaryFrame[row*width/8+col] & (0x01 << (7-bit))) == 0 ? 0 : 50;
+                    unsigned char pixelValue = (binaryFrame[row*width/8+col] & (0x01 << (7-bit))) == 0 ? 0 : 255;
 
                     for(int subRow = 0; subRow < sRow-1; subRow++) {
                         for(int subCol = 0; subCol < sCol-1; subCol ++) {

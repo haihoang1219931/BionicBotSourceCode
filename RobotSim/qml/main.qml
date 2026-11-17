@@ -153,11 +153,10 @@ ApplicationWindow {
 
     // --- Control Buttons Calling updateServoAngles(head, body, leftArm, rightArm) ---
     ColumnLayout {
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.bottomMargin: 25
         RowLayout {
-            anchors.horizontalCenter: parent.horizontalCenter
-            anchors.bottomMargin: 25
             spacing: 10
-
             Button {
                 text: "Center"
                 onClicked: root.updateServoAngles(0, 0, 15, -15)
@@ -184,10 +183,7 @@ ApplicationWindow {
             }
         }
         RowLayout {
-            anchors.horizontalCenter: parent.horizontalCenter
-            anchors.bottomMargin: 25
             spacing: 10
-
             Button {
                 text: "Start Up"
                 onClicked: mainProcess.changeEmotion(0)

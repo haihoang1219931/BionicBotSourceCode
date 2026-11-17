@@ -22,6 +22,7 @@ ApplicationController::ApplicationController()
     m_emotionDisplay = new EmotionDisplay(this, DISPLAY_WIDTH, DISPLAY_HEIGH);
     m_audioPlayer = new AudioPlayer(this);
     m_currentEmotion = EMOTION_START_UP;
+    m_emotionState = EMOTION_TASK_INIT;
 }
 
 ApplicationController::~ApplicationController() {
@@ -75,6 +76,7 @@ EMOTION_STATE ApplicationController::emotionStartupTask() {
     switch (m_emotionState) {
     case EMOTION_TASK_INIT: {
         m_emotionState = EMOTION_TASK_PENDING;
+        m_emotionDisplay->initEmotion(EMOTION_START_UP);
     }
         break;
     case EMOTION_TASK_PENDING: {
