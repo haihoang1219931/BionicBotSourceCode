@@ -29,6 +29,10 @@
 #define MOTION_INIT_VALUE 0.0f
 typedef enum {
     EMOTION_START_UP,
+    EMOTION_WAKEUP_OPEN_EYES,
+    EMOTION_WAKEUP_LOOK_LEFT,
+    EMOTION_WAKEUP_LOOK_RIGHT,
+    EMOTION_WAKEUP_YAWN,
     EMOTION_IDLE,
     EMOTION_HAPPY,
     EMOTION_ANGRY,
@@ -65,9 +69,9 @@ typedef enum {
 
 typedef enum {
     MOTOR_HEAD,
+    MOTOR_BODY,
     MOTOR_ARM_LEFT,
     MOTOR_ARM_RIGHT,
-    MOTOR_BODY,
     MAX_MOTOR
 } MOTOR;
 
@@ -85,11 +89,11 @@ typedef enum {
 } TOUCH;
 
 typedef struct {
-    float currentAngle;
-    float startAngle;
-    float targetAngle;
-    float progress;
-    float speed;
+    int currentAngle;
+    int startAngle;
+    int targetAngle;
+    int progress;
+    int speed;
 } ServoParam;
 
 typedef struct {

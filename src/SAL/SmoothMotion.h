@@ -7,11 +7,12 @@ class SmoothMotion {
   public:
     SmoothMotion(MOTOR id, ApplicationController* app);
     void initMotion();
-    void setEmotionState(float targetAngle,
-                         float speed);
+    void setTarget(int targetAngle,
+                         int speed);
     MOTION_STATE currentState();
     MOTION_STATE motionMainFuntion();
     float currentAngle();
+    void setCurrentAngle(int currentAngle);
 private:
     ApplicationController* m_app;
     ServoParam m_currentParam;

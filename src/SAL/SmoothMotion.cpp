@@ -1,5 +1,6 @@
 #include "SmoothMotion.h"
 #include "ApplicationController.h"
+#include <math.h>
 #if defined(DEBUG_COMMAND)
 #include "../ApplicationArduino.h"
 extern ApplicationArduino app;
@@ -9,7 +10,6 @@ SmoothMotion::SmoothMotion(MOTOR id, ApplicationController* app):
     m_motionState(MOTION_INIT),
     m_id(id)
 {
-
 }
 
 void SmoothMotion::initMotion()
@@ -21,12 +21,11 @@ void SmoothMotion::initMotion()
     m_currentParam.progress = MOTION_INIT_VALUE;
 }
 
-void SmoothMotion::setEmotionState(float targetAngle,
-                                   float speed)
+void SmoothMotion::setTarget(int targetAngle,
+                                   int speed)
 {
-  m_targetParam.currentAngle = MOTION_INIT_VALUE;
   m_targetParam.targetAngle = targetAngle;
-  m_targetParam.speed = speed;
+  m_targetParam.speed = targetAngle > m_currentParam.currentAngle ? abs(speed) : -abs(speed);
   m_motionState = MOTION_INIT;
 }
 
@@ -50,15 +49,22 @@ MOTION_STATE SmoothMotion::motionMainFuntion()
         m_app->enableMotor(m_id, true);
         m_motionState = MOTION_INPROGRESS;
         m_currentParam.targetAngle = m_targetParam.targetAngle;
-        m_currentParam.speed = m_currentParam.targetAngle - m_currentParam.currentAngle;
+        m_currentParam.speed = m_targetParam.speed;
     }
         break;
     case MOTION_INPROGRESS:
     {
-        float nextAngle = m_currentParam.currentAngle + m_currentParam.speed;
+        int nextAngle = m_currentParam.currentAngle + m_currentParam.speed;
         if(nextAngle * m_currentParam.speed >
                 m_currentParam.targetAngle * m_currentParam.speed) {
             m_motionState = MOTION_IDLE;
+        } else {
+            m_currentParam.currentAngle = nextAngle;
+            m_app->setMotorAngle(m_id,nextAngle);
+#ifdef DEBUG_MOTION
+            m_app->printf("Motion[%d] c[%d]/t[%d] s[%d]\r\n",
+                          m_id,m_currentParam.currentAngle,m_currentParam.targetAngle,m_currentParam.speed);
+#endif
         }
     }
         break;
@@ -71,4 +77,9 @@ MOTION_STATE SmoothMotion::motionMainFuntion()
 float SmoothMotion::currentAngle()
 {
     return m_currentParam.currentAngle;
+}
+
+void SmoothMotion::setCurrentAngle(int currentAngle)
+{
+    m_currentParam.currentAngle = currentAngle;
 }

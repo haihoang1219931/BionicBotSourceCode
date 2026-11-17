@@ -14,6 +14,7 @@ public:
     long getSystemTime() override;
     void enableHardwareTimer(bool enable) override;
     void enableMotor(MOTOR motorID, bool enable) override;
+    void setMotorAngle(MOTOR motorID, int angle) override;
 private:
     MainProcess* m_mainProcess;
     char m_command[MAX_COMMAND_LENGTH];

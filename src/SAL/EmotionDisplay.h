@@ -17,20 +17,24 @@ public:
 
 private:
     void displayAnimStartup();
+    void displayAnimWakeupOpenEyes();
+    void displayAnimWakeupLookLeft();
+    void displayAnimWakeupLookRight();
+    void displayAnimWakeupYawn();
     void displayAnimIdle();
     void displayAnimHappy();
     void displayAnimAngry();
     void displayAnimTicled();
     void displayAnimSupprised();
 
+    unsigned char m_frameData[9600]; // 320x240 bit
     int m_width;
     int m_height;
-    unsigned char m_frameData[9600]; // 320x240 bit
-    ApplicationController* m_app;
     DisplayParam m_currentParam;
     DISPLAY_STATE m_displayState;
     EMOTION m_currentEmotion;
     int m_animFrameIndex;
+    ApplicationController* m_app;
 };
 
 #endif // EMOTIONDISPLAY_H

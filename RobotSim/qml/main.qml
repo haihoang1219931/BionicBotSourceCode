@@ -14,15 +14,15 @@ ApplicationWindow {
     // --- 4 Servo Angle Properties (in degrees) ---
     property real servoHead: 0       // Head yaw turn (-45 to +45 deg)
     property real servoBody: 0       // Body yaw turn (-35 to +35 deg)
-    property real servoLeftArm: 0   // Left arm swing (0 to 150 deg)
-    property real servoRightArm: 0 // Right arm swing (0 to 150 deg)
+    property real servoLeftArm: 0   // Left arm swing (-90 to 150 deg)
+    property real servoRightArm: 0 // Right arm swing (-90 to 150 deg)
 
     // --- Single Function to Update All Servo Angles ---
     function updateServoAngles(head, body, leftArm, rightArm) {
         root.servoHead = Math.max(-45, Math.min(45, head))
         root.servoBody = Math.max(-35, Math.min(35, body))
-        root.servoLeftArm = Math.max(0, Math.min(150, leftArm))
-        root.servoRightArm = Math.max(0, Math.min(150, servoRightArm))
+        root.servoLeftArm = Math.max(-90, Math.min(150, leftArm))
+        root.servoRightArm = Math.max(-90, Math.min(150, rightArm))
     }
 
     // Smooth servo motor easing
@@ -159,15 +159,15 @@ ApplicationWindow {
             spacing: 10
             Button {
                 text: "Center"
-                onClicked: root.updateServoAngles(0, 0, 15, -15)
+                onClicked: root.updateServoAngles(0, 0, 15, 15)
             }
             Button {
                 text: "Turn Left"
-                onClicked: root.updateServoAngles(-35, -25, 30, -15)
+                onClicked: root.updateServoAngles(10, 10, 30, -10)
             }
             Button {
                 text: "Turn Right"
-                onClicked: root.updateServoAngles(35, 25, 15, -30)
+                onClicked: root.updateServoAngles(-10, -10, -10, 30)
             }
             Button {
                 text: "Left Arm"

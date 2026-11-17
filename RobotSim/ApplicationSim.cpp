@@ -16,6 +16,10 @@ ApplicationSim::ApplicationSim(MainProcess* mainProcess):
 {
     memset(m_command,0x00U, sizeof(m_command));
     initRobot();
+    m_motionList[MOTOR_HEAD]->setCurrentAngle(30);
+    m_motionList[MOTOR_ARM_LEFT]->setCurrentAngle(30);
+    m_motionList[MOTOR_ARM_RIGHT]->setCurrentAngle(30);
+    m_motionList[MOTOR_BODY]->setCurrentAngle(30);
 }
 
 ApplicationSim::~ApplicationSim()
@@ -82,4 +86,10 @@ void ApplicationSim::enableHardwareTimer(bool enable)
 void ApplicationSim::enableMotor(MOTOR motorID, bool enable)
 {
 
+}
+
+void ApplicationSim::setMotorAngle(MOTOR motorID, int angle)
+{
+    Q_UNUSED(motorID);
+    Q_UNUSED(angle);
 }

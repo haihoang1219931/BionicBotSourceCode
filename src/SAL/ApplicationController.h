@@ -23,6 +23,7 @@ public:
     virtual long getSystemTime() = 0;
     virtual void enableHardwareTimer(bool enable) = 0;
     virtual void enableMotor(MOTOR motorID, bool enable) = 0;
+    virtual void setMotorAngle(MOTOR motorID, int angle) = 0;
     int getScreenWidth();
     int getScreenHeight();
     unsigned char* getScreenData();
@@ -32,16 +33,20 @@ public:
     void executeOledLoop();
     void executeInputLoop();
 
-protected:
-    int m_appTimer;
-
 private:
     EMOTION_STATE emotionStartupTask();
+    EMOTION_STATE emotionWakeupOpenEyesTask();
+    EMOTION_STATE emotionWakeupLookLeftTask();
+    EMOTION_STATE emotionWakeupLookRightTask();
+    EMOTION_STATE emotionWakeupYawnTask();
+    EMOTION_STATE emotionIdleTask();
     EMOTION_STATE emotionHappyTask();
     EMOTION_STATE emotionAngryTask();
     EMOTION_STATE emotionTickledTask();
     EMOTION_STATE emotionSupprisedTask();
 
+protected:
+    int m_appTimer;
     EMOTION m_currentEmotion;
     EMOTION_STATE m_emotionState;
     Button* m_touchList[MAX_TOUCH];
