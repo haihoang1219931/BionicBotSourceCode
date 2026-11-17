@@ -1,146 +1,439 @@
 #include "LCDLibrary.h"
 
-void copyShiftArray(unsigned char* dest, int destLen, unsigned char* src, int srcLen, int pos, bool invertBG = false) {
-    if(pos >=0) {
-        int copyBits = pos + srcLen*8 <= destLen*8 ? srcLen*8: destLen*8-pos;
-        int rShift = pos % 8;
-        for(int i=0;i <= copyBits; i+=8) {
-                if((i+pos)/8 < destLen) {
-                unsigned char value =
-                        (i/8-1>=0 ? (src[i/8-1] << (8-rShift)) : 0x00) |
-                        (i/8 <srcLen ? (src[i/8] >> (rShift)) : 0x00);
-                if(invertBG) {
-                    dest[(i+pos)/8] &= ~(value);
-                }else {
-                    dest[(i+pos)/8] |= value;
+const unsigned char openGLletters[95][13] = {
+{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},// space :32
+{0x00, 0x00, 0x18, 0x18, 0x00, 0x00, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18},// ! :33
+{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x36, 0x36, 0x36, 0x36},
+{0x00, 0x00, 0x00, 0x66, 0x66, 0xff, 0x66, 0x66, 0xff, 0x66, 0x66, 0x00, 0x00},
+{0x00, 0x00, 0x18, 0x7e, 0xff, 0x1b, 0x1f, 0x7e, 0xf8, 0xd8, 0xff, 0x7e, 0x18},
+{0x00, 0x00, 0x0e, 0x1b, 0xdb, 0x6e, 0x30, 0x18, 0x0c, 0x76, 0xdb, 0xd8, 0x70},
+{0x00, 0x00, 0x7f, 0xc6, 0xcf, 0xd8, 0x70, 0x70, 0xd8, 0xcc, 0xcc, 0x6c, 0x38},
+{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x18, 0x1c, 0x0c, 0x0e},
+{0x00, 0x00, 0x0c, 0x18, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x18, 0x0c},
+{0x00, 0x00, 0x30, 0x18, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x18, 0x30},
+{0x00, 0x00, 0x00, 0x00, 0x99, 0x5a, 0x3c, 0xff, 0x3c, 0x5a, 0x99, 0x00, 0x00},
+{0x00, 0x00, 0x00, 0x18, 0x18, 0x18, 0xff, 0xff, 0x18, 0x18, 0x18, 0x00, 0x00},
+{0x00, 0x00, 0x30, 0x18, 0x1c, 0x1c, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
+{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xff, 0xff, 0x00, 0x00, 0x00, 0x00, 0x00},
+{0x00, 0x00, 0x00, 0x38, 0x38, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
+{0x00, 0x60, 0x60, 0x30, 0x30, 0x18, 0x18, 0x0c, 0x0c, 0x06, 0x06, 0x03, 0x03},
+{0x00, 0x00, 0x3c, 0x66, 0xc3, 0xe3, 0xf3, 0xdb, 0xcf, 0xc7, 0xc3, 0x66, 0x3c},
+{0x00, 0x00, 0x7e, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x78, 0x38, 0x18},
+{0x00, 0x00, 0xff, 0xc0, 0xc0, 0x60, 0x30, 0x18, 0x0c, 0x06, 0x03, 0xe7, 0x7e},
+{0x00, 0x00, 0x7e, 0xe7, 0x03, 0x03, 0x07, 0x7e, 0x07, 0x03, 0x03, 0xe7, 0x7e},
+{0x00, 0x00, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0xff, 0xcc, 0x6c, 0x3c, 0x1c, 0x0c},
+{0x00, 0x00, 0x7e, 0xe7, 0x03, 0x03, 0x07, 0xfe, 0xc0, 0xc0, 0xc0, 0xc0, 0xff},
+{0x00, 0x00, 0x7e, 0xe7, 0xc3, 0xc3, 0xc7, 0xfe, 0xc0, 0xc0, 0xc0, 0xe7, 0x7e},
+{0x00, 0x00, 0x30, 0x30, 0x30, 0x30, 0x18, 0x0c, 0x06, 0x03, 0x03, 0x03, 0xff},
+{0x00, 0x00, 0x7e, 0xe7, 0xc3, 0xc3, 0xe7, 0x7e, 0xe7, 0xc3, 0xc3, 0xe7, 0x7e},
+{0x00, 0x00, 0x7e, 0xe7, 0x03, 0x03, 0x03, 0x7f, 0xe7, 0xc3, 0xc3, 0xe7, 0x7e},
+{0x00, 0x00, 0x00, 0x38, 0x38, 0x00, 0x00, 0x38, 0x38, 0x00, 0x00, 0x00, 0x00},
+{0x00, 0x00, 0x30, 0x18, 0x1c, 0x1c, 0x00, 0x00, 0x1c, 0x1c, 0x00, 0x00, 0x00},
+{0x00, 0x00, 0x06, 0x0c, 0x18, 0x30, 0x60, 0xc0, 0x60, 0x30, 0x18, 0x0c, 0x06},
+{0x00, 0x00, 0x00, 0x00, 0xff, 0xff, 0x00, 0xff, 0xff, 0x00, 0x00, 0x00, 0x00},
+{0x00, 0x00, 0x60, 0x30, 0x18, 0x0c, 0x06, 0x03, 0x06, 0x0c, 0x18, 0x30, 0x60},
+{0x00, 0x00, 0x18, 0x00, 0x00, 0x18, 0x18, 0x0c, 0x06, 0x03, 0xc3, 0xc3, 0x7e},
+{0x00, 0x00, 0x3f, 0x60, 0xcf, 0xdb, 0xd3, 0xdd, 0xc3, 0x7e, 0x00, 0x00, 0x00},
+{0x00, 0x00, 0xc3, 0xc3, 0xc3, 0xc3, 0xff, 0xc3, 0xc3, 0xc3, 0x66, 0x3c, 0x18},
+{0x00, 0x00, 0xfe, 0xc7, 0xc3, 0xc3, 0xc7, 0xfe, 0xc7, 0xc3, 0xc3, 0xc7, 0xfe},
+{0x00, 0x00, 0x7e, 0xe7, 0xc0, 0xc0, 0xc0, 0xc0, 0xc0, 0xc0, 0xc0, 0xe7, 0x7e},
+{0x00, 0x00, 0xfc, 0xce, 0xc7, 0xc3, 0xc3, 0xc3, 0xc3, 0xc3, 0xc7, 0xce, 0xfc},
+{0x00, 0x00, 0xff, 0xc0, 0xc0, 0xc0, 0xc0, 0xfc, 0xc0, 0xc0, 0xc0, 0xc0, 0xff},
+{0x00, 0x00, 0xc0, 0xc0, 0xc0, 0xc0, 0xc0, 0xc0, 0xfc, 0xc0, 0xc0, 0xc0, 0xff},
+{0x00, 0x00, 0x7e, 0xe7, 0xc3, 0xc3, 0xcf, 0xc0, 0xc0, 0xc0, 0xc0, 0xe7, 0x7e},
+{0x00, 0x00, 0xc3, 0xc3, 0xc3, 0xc3, 0xc3, 0xff, 0xc3, 0xc3, 0xc3, 0xc3, 0xc3},
+{0x00, 0x00, 0x7e, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x7e},
+{0x00, 0x00, 0x7c, 0xee, 0xc6, 0x06, 0x06, 0x06, 0x06, 0x06, 0x06, 0x06, 0x06},
+{0x00, 0x00, 0xc3, 0xc6, 0xcc, 0xd8, 0xf0, 0xe0, 0xf0, 0xd8, 0xcc, 0xc6, 0xc3},
+{0x00, 0x00, 0xff, 0xc0, 0xc0, 0xc0, 0xc0, 0xc0, 0xc0, 0xc0, 0xc0, 0xc0, 0xc0},
+{0x00, 0x00, 0xc3, 0xc3, 0xc3, 0xc3, 0xc3, 0xc3, 0xdb, 0xff, 0xff, 0xe7, 0xc3},
+{0x00, 0x00, 0xc7, 0xc7, 0xcf, 0xcf, 0xdf, 0xdb, 0xfb, 0xf3, 0xf3, 0xe3, 0xe3},
+{0x00, 0x00, 0x7e, 0xe7, 0xc3, 0xc3, 0xc3, 0xc3, 0xc3, 0xc3, 0xc3, 0xe7, 0x7e},
+{0x00, 0x00, 0xc0, 0xc0, 0xc0, 0xc0, 0xc0, 0xfe, 0xc7, 0xc3, 0xc3, 0xc7, 0xfe},
+{0x00, 0x00, 0x3f, 0x6e, 0xdf, 0xdb, 0xc3, 0xc3, 0xc3, 0xc3, 0xc3, 0x66, 0x3c},
+{0x00, 0x00, 0xc3, 0xc6, 0xcc, 0xd8, 0xf0, 0xfe, 0xc7, 0xc3, 0xc3, 0xc7, 0xfe},
+{0x00, 0x00, 0x7e, 0xe7, 0x03, 0x03, 0x07, 0x7e, 0xe0, 0xc0, 0xc0, 0xe7, 0x7e},
+{0x00, 0x00, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0xff},
+{0x00, 0x00, 0x7e, 0xe7, 0xc3, 0xc3, 0xc3, 0xc3, 0xc3, 0xc3, 0xc3, 0xc3, 0xc3},
+{0x00, 0x00, 0x18, 0x3c, 0x3c, 0x66, 0x66, 0xc3, 0xc3, 0xc3, 0xc3, 0xc3, 0xc3},
+{0x00, 0x00, 0xc3, 0xe7, 0xff, 0xff, 0xdb, 0xdb, 0xc3, 0xc3, 0xc3, 0xc3, 0xc3},
+{0x00, 0x00, 0xc3, 0x66, 0x66, 0x3c, 0x3c, 0x18, 0x3c, 0x3c, 0x66, 0x66, 0xc3},
+{0x00, 0x00, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x3c, 0x3c, 0x66, 0x66, 0xc3},
+{0x00, 0x00, 0xff, 0xc0, 0xc0, 0x60, 0x30, 0x7e, 0x0c, 0x06, 0x03, 0x03, 0xff},
+{0x00, 0x00, 0x3c, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x3c},
+{0x00, 0x03, 0x03, 0x06, 0x06, 0x0c, 0x0c, 0x18, 0x18, 0x30, 0x30, 0x60, 0x60},
+{0x00, 0x00, 0x3c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x3c},
+{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xc3, 0x66, 0x3c, 0x18},
+{0xff, 0xff, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
+{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x18, 0x38, 0x30, 0x70},
+{0x00, 0x00, 0x7f, 0xc3, 0xc3, 0x7f, 0x03, 0xc3, 0x7e, 0x00, 0x00, 0x00, 0x00},
+{0x00, 0x00, 0xfe, 0xc3, 0xc3, 0xc3, 0xc3, 0xfe, 0xc0, 0xc0, 0xc0, 0xc0, 0xc0},
+{0x00, 0x00, 0x7e, 0xc3, 0xc0, 0xc0, 0xc0, 0xc3, 0x7e, 0x00, 0x00, 0x00, 0x00},
+{0x00, 0x00, 0x7f, 0xc3, 0xc3, 0xc3, 0xc3, 0x7f, 0x03, 0x03, 0x03, 0x03, 0x03},
+{0x00, 0x00, 0x7f, 0xc0, 0xc0, 0xfe, 0xc3, 0xc3, 0x7e, 0x00, 0x00, 0x00, 0x00},
+{0x00, 0x00, 0x30, 0x30, 0x30, 0x30, 0x30, 0xfc, 0x30, 0x30, 0x30, 0x33, 0x1e},
+{0x7e, 0xc3, 0x03, 0x03, 0x7f, 0xc3, 0xc3, 0xc3, 0x7e, 0x00, 0x00, 0x00, 0x00},
+{0x00, 0x00, 0xc3, 0xc3, 0xc3, 0xc3, 0xc3, 0xc3, 0xfe, 0xc0, 0xc0, 0xc0, 0xc0},
+{0x00, 0x00, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x00, 0x00, 0x18, 0x00},
+{0x38, 0x6c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x0c, 0x00, 0x00, 0x0c, 0x00},
+{0x00, 0x00, 0xc6, 0xcc, 0xf8, 0xf0, 0xd8, 0xcc, 0xc6, 0xc0, 0xc0, 0xc0, 0xc0},
+{0x00, 0x00, 0x7e, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x78},
+{0x00, 0x00, 0xdb, 0xdb, 0xdb, 0xdb, 0xdb, 0xdb, 0xfe, 0x00, 0x00, 0x00, 0x00},
+{0x00, 0x00, 0xc6, 0xc6, 0xc6, 0xc6, 0xc6, 0xc6, 0xfc, 0x00, 0x00, 0x00, 0x00},
+{0x00, 0x00, 0x7c, 0xc6, 0xc6, 0xc6, 0xc6, 0xc6, 0x7c, 0x00, 0x00, 0x00, 0x00},
+{0xc0, 0xc0, 0xc0, 0xfe, 0xc3, 0xc3, 0xc3, 0xc3, 0xfe, 0x00, 0x00, 0x00, 0x00},
+{0x03, 0x03, 0x03, 0x7f, 0xc3, 0xc3, 0xc3, 0xc3, 0x7f, 0x00, 0x00, 0x00, 0x00},
+{0x00, 0x00, 0xc0, 0xc0, 0xc0, 0xc0, 0xc0, 0xe0, 0xfe, 0x00, 0x00, 0x00, 0x00},
+{0x00, 0x00, 0xfe, 0x03, 0x03, 0x7e, 0xc0, 0xc0, 0x7f, 0x00, 0x00, 0x00, 0x00},
+{0x00, 0x00, 0x1c, 0x36, 0x30, 0x30, 0x30, 0x30, 0xfc, 0x30, 0x30, 0x30, 0x00},
+{0x00, 0x00, 0x7e, 0xc6, 0xc6, 0xc6, 0xc6, 0xc6, 0xc6, 0x00, 0x00, 0x00, 0x00},
+{0x00, 0x00, 0x18, 0x3c, 0x3c, 0x66, 0x66, 0xc3, 0xc3, 0x00, 0x00, 0x00, 0x00},
+{0x00, 0x00, 0xc3, 0xe7, 0xff, 0xdb, 0xc3, 0xc3, 0xc3, 0x00, 0x00, 0x00, 0x00},
+{0x00, 0x00, 0xc3, 0x66, 0x3c, 0x18, 0x3c, 0x66, 0xc3, 0x00, 0x00, 0x00, 0x00},
+{0xc0, 0x60, 0x60, 0x30, 0x18, 0x3c, 0x66, 0x66, 0xc3, 0x00, 0x00, 0x00, 0x00},
+{0x00, 0x00, 0xff, 0x60, 0x30, 0x18, 0x0c, 0x06, 0xff, 0x00, 0x00, 0x00, 0x00},
+{0x00, 0x00, 0x0f, 0x18, 0x18, 0x18, 0x38, 0xf0, 0x38, 0x18, 0x18, 0x18, 0x0f},
+{0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18, 0x18},
+{0x00, 0x00, 0xf0, 0x18, 0x18, 0x18, 0x1c, 0x0f, 0x1c, 0x18, 0x18, 0x18, 0xf0},
+{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x06, 0x8f, 0xf1, 0x60, 0x00, 0x00, 0x00}
+};
+// Define the font descriptor using your existing openGLletters data
+const LCDFont font_8x13_opengl = {
+    &openGLletters[0][0],
+    8,      // width
+    13,     // height
+    ' ',    // firstChar (ASCII 32)
+    '~',    // lastChar (ASCII 126)
+    true    // bottomUp = true
+};
+
+LCDLibrary::LCDLibrary(uint8_t* buffer, int width, int height)
+    : _buffer(buffer), _width(width), _height(height),
+      _drawColor(1), _font(&font_8x13_opengl),
+      _cursorX(0), _cursorY(0), _charSpacing(1) {
+    clearBuffer();
+}
+
+void LCDLibrary::clearBuffer() {
+    if (_buffer) {
+        memset(_buffer, 0x00, (_width * _height) / 8);
+    }
+}
+
+void LCDLibrary::fillBuffer() {
+    if (_buffer) {
+        memset(_buffer, 0xFF, (_width * _height) / 8);
+    }
+}
+
+void LCDLibrary::setDrawColor(uint8_t color) {
+    _drawColor = color;
+}
+
+void LCDLibrary::drawPixel(int x, int y) {
+    if (!_buffer || x < 0 || x >= _width || y < 0 || y >= _height) return;
+
+    int byteIdx = (y * _width + x) / 8;
+    uint8_t bitMask = 0x80 >> (x % 8);
+
+    if (_drawColor == 1) {
+        _buffer[byteIdx] |= bitMask;
+    } else if (_drawColor == 0) {
+        _buffer[byteIdx] &= ~bitMask;
+    } else if (_drawColor == 2) {
+        _buffer[byteIdx] ^= bitMask;
+    }
+}
+
+void LCDLibrary::drawHLine(int x, int y, int w) {
+    for (int i = 0; i < w; i++) drawPixel(x + i, y);
+}
+
+void LCDLibrary::drawVLine(int x, int y, int h) {
+    for (int i = 0; i < h; i++) drawPixel(x, y + i);
+}
+
+// Bresenham's Line Algorithm (works in all 360 degrees)
+void LCDLibrary::drawLine(int x0, int y0, int x1, int y1, int thickness) {
+    int dx = abs(x1 - x0);
+    int sx = x0 < x1 ? 1 : -1;
+    int dy = -abs(y1 - y0);
+    int sy = y0 < y1 ? 1 : -1;
+    int err = dx + dy;
+
+    int halfT = thickness / 2;
+
+    while (true) {
+        if (thickness <= 1) {
+            drawPixel(x0, y0);
+        } else {
+            for (int tx = -halfT; tx < thickness - halfT; tx++) {
+                for (int ty = -halfT; ty < thickness - halfT; ty++) {
+                    drawPixel(x0 + tx, y0 + ty);
                 }
             }
         }
-    } else {
-        int copyBits = pos + srcLen*8 >0 ? pos + srcLen*8: -1;
-        int rShift = 8-(-pos)%8;
-        for(int i=0;i <= copyBits; i+=8) {
-            unsigned char value =
-                    ((i-pos)/8 < srcLen ? (src[(i-pos)/8] << (8-rShift)) : 0x00) |
-                ((i-pos)/8+1 < srcLen ? (src[(i-pos)/8+1] >> (rShift)) : 0x00);
-            if(invertBG) {
-                dest[(i)/8] &= ~(value);
-            }else {
-                dest[(i)/8] |= value;
+        if (x0 == x1 && y0 == y1) break;
+        int e2 = 2 * err;
+        if (e2 >= dy) { err += dy; x0 += sx; }
+        if (e2 <= dx) { err += dx; y0 += sy; }
+    }
+}
+
+void LCDLibrary::drawFrame(int x, int y, int w, int h, int thickness) {
+    if (w <= 0 || h <= 0) return;
+    for (int t = 0; t < thickness; t++) {
+        drawHLine(x + t, y + t, w - 2 * t);
+        drawHLine(x + t, y + h - 1 - t, w - 2 * t);
+        drawVLine(x + t, y + t, h - 2 * t);
+        drawVLine(x + w - 1 - t, y + t, h - 2 * t);
+    }
+}
+
+void LCDLibrary::drawBox(int x, int y, int w, int h) {
+    if (w <= 0 || h <= 0) return;
+    for (int row = 0; row < h; row++) {
+        drawHLine(x, y + row, w);
+    }
+}
+
+void LCDLibrary::drawRFrame(int x, int y, int w, int h, int r) {
+    if (r <= 0) { drawFrame(x, y, w, h); return; }
+    if (r > w / 2) r = w / 2;
+    if (r > h / 2) r = h / 2;
+
+    // Straight edges
+    drawHLine(x + r, y, w - 2 * r);
+    drawHLine(x + r, y + h - 1, w - 2 * r);
+    drawVLine(x, y + r, h - 2 * r);
+    drawVLine(x + w - 1, y + r, h - 2 * r);
+
+    // Four rounded corners (Midpoint circle algorithm)
+    int f = 1 - r;
+    int ddF_x = 1;
+    int ddF_y = -2 * r;
+    int cx = 0;
+    int cy = r;
+
+    while (cx < cy) {
+        if (f >= 0) {
+            cy--;
+            ddF_y += 2;
+            f += ddF_y;
+        }
+        cx++;
+        ddF_x += 2;
+        f += ddF_x;
+
+        // Top-right
+        drawPixel(x + w - 1 - r + cx, y + r - cy);
+        drawPixel(x + w - 1 - r + cy, y + r - cx);
+        // Top-left
+        drawPixel(x + r - cx, y + r - cy);
+        drawPixel(x + r - cy, y + r - cx);
+        // Bottom-right
+        drawPixel(x + w - 1 - r + cx, y + h - 1 - r + cy);
+        drawPixel(x + w - 1 - r + cy, y + h - 1 - r + cx);
+        // Bottom-left
+        drawPixel(x + r - cx, y + h - 1 - r + cy);
+        drawPixel(x + r - cy, y + h - 1 - r + cx);
+    }
+}
+
+void LCDLibrary::drawRBox(int x, int y, int w, int h, int r) {
+    if (r <= 0) { drawBox(x, y, w, h); return; }
+    if (r > w / 2) r = w / 2;
+    if (r > h / 2) r = h / 2;
+
+    // Center solid body
+    drawBox(x, y + r, w, h - 2 * r);
+
+    // Top and bottom rounded caps
+    int f = 1 - r;
+    int ddF_x = 1;
+    int ddF_y = -2 * r;
+    int cx = 0;
+    int cy = r;
+
+    while (cx <= cy) {
+        drawHLine(x + r - cx, y + r - cy, w - 2 * (r - cx));
+        drawHLine(x + r - cy, y + r - cx, w - 2 * (r - cy));
+        drawHLine(x + r - cx, y + h - 1 - r + cy, w - 2 * (r - cx));
+        drawHLine(x + r - cy, y + h - 1 - r + cx, w - 2 * (r - cy));
+
+        if (f >= 0) {
+            cy--;
+            ddF_y += 2;
+            f += ddF_y;
+        }
+        cx++;
+        ddF_x += 2;
+        f += ddF_x;
+    }
+}
+
+void LCDLibrary::drawEllipse(int x0, int y0, int rx, int ry) {
+    if (rx <= 0 || ry <= 0) return;
+    long rx2 = (long)rx * rx;
+    long ry2 = (long)ry * ry;
+    long twoRx2 = 2 * rx2;
+    long twoRy2 = 2 * ry2;
+    long p;
+    long x = 0;
+    long y = ry;
+    long px = 0;
+    long py = twoRx2 * y;
+
+    // Region 1
+    p = (long)(ry2 - (rx2 * ry) + (0.25 * rx2));
+    while (px < py) {
+        drawPixel(x0 + x, y0 + y);
+        drawPixel(x0 - x, y0 + y);
+        drawPixel(x0 + x, y0 - y);
+        drawPixel(x0 - x, y0 - y);
+        x++;
+        px += twoRy2;
+        if (p < 0) {
+            p += ry2 + px;
+        } else {
+            y--;
+            py -= twoRx2;
+            p += ry2 + px - py;
+        }
+    }
+
+    // Region 2
+    p = (long)(ry2 * (x + 0.5) * (x + 0.5) + rx2 * (y - 1) * (y - 1) - rx2 * ry2);
+    while (y >= 0) {
+        drawPixel(x0 + x, y0 + y);
+        drawPixel(x0 - x, y0 + y);
+        drawPixel(x0 + x, y0 - y);
+        drawPixel(x0 - x, y0 - y);
+        y--;
+        py -= twoRx2;
+        if (p > 0) {
+            p += rx2 - py;
+        } else {
+            x++;
+            px += twoRy2;
+            p += rx2 - py + px;
+        }
+    }
+}
+
+void LCDLibrary::drawFilledEllipse(int x0, int y0, int rx, int ry) {
+    if (rx <= 0 || ry <= 0) return;
+    for (int y = -ry; y <= ry; y++) {
+        int xSpan = (int)(rx * sqrt(1.0 - (double)(y * y) / (ry * ry)));
+        drawHLine(x0 - xSpan, y0 + y, 2 * xSpan + 1);
+    }
+}
+
+void LCDLibrary::drawArc(int x0, int y0, int r, float startAngle, float endAngle, bool fill) {
+    if (r <= 0) return;
+    const float degToRad = 3.14159265f / 180.0f;
+    float step = 1.0f / (float)r; // Adaptive angular step in radians
+    float startRad = startAngle * degToRad;
+    float endRad = endAngle * degToRad;
+
+    if (endRad < startRad) endRad += 2.0f * 3.14159265f;
+
+    for (float a = startRad; a <= endRad; a += step) {
+        int px = x0 + (int)round(r * cos(a));
+        int py = y0 + (int)round(r * sin(a));
+        if (fill) {
+            drawLine(x0, y0, px, py);
+        } else {
+            drawPixel(px, py);
+        }
+    }
+}
+
+// Fast horizontal byte-shifting blit (adapted from your copyShiftArray)
+void LCDLibrary::copyShiftArray(uint8_t* dest, int destLen, const uint8_t* src, int srcLen, int pos) {
+    if (pos >= 0) {
+        int copyBits = (pos + srcLen * 8 <= destLen * 8) ? srcLen * 8 : destLen * 8 - pos;
+        int rShift = pos % 8;
+        for (int i = 0; i < copyBits; i += 8) {
+            if ((i + pos) / 8 < destLen) {
+                uint8_t left = (i / 8 - 1 >= 0 && rShift != 0) ? (src[i / 8 - 1] << (8 - rShift)) : 0x00;
+                uint8_t right = (i / 8 < srcLen) ? (src[i / 8] >> rShift) : 0x00;
+                uint8_t value = left | right;
+
+                if (_drawColor == 1) dest[(i + pos) / 8] |= value;
+                else if (_drawColor == 0) dest[(i + pos) / 8] &= ~value;
+                else if (_drawColor == 2) dest[(i + pos) / 8] ^= value;
             }
         }
-    }
-}
-void printObject(unsigned char * object, int width, int height){
-    for(int row = 0; row < height; row ++) {
-        for(int col = 0; col < width / 8; col ++) {
-            printf(BYTE_TO_BINARY_PATTERN,BYTE_TO_BINARY(object[row*width/8+col]));
-        }
-        printf("\r\n");
-    }
-    printf("\r\n");
-}
-void LCDLibrary::clear(unsigned char* display, int displayWidth, int displayHeight, bool invertBG) {
-    memset((void*)display,invertBG?0xFF:0x00,displayWidth*displayHeight/8);
-}
-
-void LCDLibrary::drawPixel(unsigned char* display, int displayWidth, int displayHeight,
-                           int posX, int posY, bool invertBG) {
-
-    if(posX >=0 && posX < displayWidth &&
-            posY >=0 && posY < displayHeight){
-        if(invertBG) {
-            display[(posY*displayWidth+posX)/8] &= ~(0x80 >> (posX % 8));
-        } else {
-            display[(posY*displayWidth+posX)/8] |= 0x80 >> (posX % 8);
-        }
-    }
-}
-void LCDLibrary::drawObject(unsigned char* display, int displayWidth, int displayHeight,
-                            unsigned char* object, int objectWidth, int objectHeight,
-                            int posX, int posY, bool invertBG) {
-    for(int row = 0; row < objectHeight; row ++) {
-        copyShiftArray(&display[(posY+row)*displayWidth/8],displayWidth/8,
-                (unsigned char*)&object[row*objectWidth/8],
-                objectWidth/8,posX,invertBG);
-    }
-//    printObject(object,objectWidth,objectHeight);
-//    printf("\r\n");
-}
-
-
-void LCDLibrary::drawChar(unsigned char* display, int displayWidth, int displayHeight,
-                          const unsigned char** fonts, char character, int posX, int posY, bool invertBG) {
-    const unsigned char* characterData = openGLletters[character - ' '];
-    unsigned char objectWidth = 8;
-    unsigned char objectHeight = 13;
-//    drawObject(display,displayWidth,displayHeight,(unsigned char*)&characterData,objectWidth,objectHeight,posX,posY,invertBG);
-    for(int row = 0; row < objectHeight; row ++) {
-        copyShiftArray(&display[(posY+row)*displayWidth/8],displayWidth/8,
-                (unsigned char*)&characterData[objectHeight - 1 -row],
-                objectWidth/8,posX, invertBG);
-    }
-//    printObject(display,displayWidth,displayHeight);
-}
-void LCDLibrary::drawString(unsigned char* display, int displayWidth, int displayHeight,
-                            const unsigned char** fonts, const char* data, int posX, int posY, int space, bool invertBG) {
-    for(int i =0; i< strlen(data); i++) {
-        drawChar(display,displayWidth,displayHeight,fonts,data[i],posX+i*(8+space),posY, invertBG);
-    }
-
-}
-void LCDLibrary::drawLine(unsigned char* display, int displayWidth, int displayHeight,
-                          int startX, int startY, int endX, int endY, int thickness, bool invertBG) {
-    if(startX == endX) {
-        float fStartX = (float)startX;
-        float fStartY = (float)startY;
-        float fEndX = (float)endX;
-        float fEndY = (float)endY;
-        float a = 1;
-        float b = -(fStartX-fEndX)/(fStartY-fEndY);
-        float c = a*fStartX + b*fStartY;
-        for(float py = fStartY; py < fEndY; py++){
-            float px = (c-b*py)/a;
-            for(int i=0; i< thickness; i++)
-                drawPixel(display,displayWidth,displayHeight,(int)px+i-thickness/2,(int)py,invertBG);
-        }
     } else {
-        float fStartX = (float)startX;
-        float fStartY = (float)startY;
-        float fEndX = (float)endX;
-        float fEndY = (float)endY;
-        float b = 1;
-        float a = -(fStartY-fEndY)/(fStartX-fEndX);
-        float c = a*fStartX + b*fStartY;
-        for(float px = fStartX; px < fEndX; px++){
-            float py = (c-a*px)/b;
-            for(int i=0; i< thickness; i++)
-                drawPixel(display,displayWidth,displayHeight,(int)px,(int)py+i-thickness/2,invertBG);
-        }    
-    }
-}
-void LCDLibrary::drawRect(unsigned char* display, int displayWidth, int displayHeight,
-                          int posX, int posY, int rectWidth, int rectHeight, int thickness, bool fill, bool invertBG) {
-    int rectWidthRemainder = rectWidth % 8;
-    int roundRectWidth = (rectWidth - rectWidthRemainder);
-    unsigned char* rect = new unsigned char[rectHeight*(roundRectWidth/8)];
+        int copyBits = (pos + srcLen * 8 > 0) ? (pos + srcLen * 8) : 0;
+        int lShift = (-pos) % 8;
+        for (int i = 0; i < copyBits; i += 8) {
+            int srcIdx = (i - pos) / 8;
+            uint8_t left = (srcIdx < srcLen) ? (src[srcIdx] << lShift) : 0x00;
+            uint8_t right = (srcIdx + 1 < srcLen && lShift != 0) ? (src[srcIdx + 1] >> (8 - lShift)) : 0x00;
+            uint8_t value = left | right;
 
-    if(fill) {
-        int halfThickness = thickness/2;
-        for(int row = 0; row < rectHeight-halfThickness; row++){
-            drawLine(display,displayWidth,displayHeight,posX,posY+halfThickness+row,posX+rectWidth,posY+halfThickness+row,thickness, invertBG);
+            if (_drawColor == 1) dest[i / 8] |= value;
+            else if (_drawColor == 0) dest[i / 8] &= ~value;
+            else if (_drawColor == 2) dest[i / 8] ^= value;
         }
-    } else {
-        int halfThickness = thickness/2;
-        drawLine(display,displayWidth,displayHeight,posX,posY+halfThickness,posX+rectWidth,posY+halfThickness,thickness,invertBG);
-        drawLine(display,displayWidth,displayHeight,posX+halfThickness,posY,posX+halfThickness,posY+rectHeight,thickness,invertBG);
-        drawLine(display,displayWidth,displayHeight,posX+rectWidth-halfThickness-1,posY,posX+rectWidth-halfThickness-1,posY+rectHeight,thickness,invertBG);
-        drawLine(display,displayWidth,displayHeight,posX,posY+rectHeight-halfThickness-1,posX+rectWidth,posY+ rectHeight-halfThickness-1,thickness,invertBG);
     }
-
-    delete[] rect;
 }
-void LCDLibrary::drawOval(unsigned char* display, int displayWidth, int displayHeight,
-                          int posX, int posY, int ovalWidth, int ovalHeight, bool fill, bool invertBG) {
-    
+
+void LCDLibrary::drawBitmap(int x, int y, int w, int h, const uint8_t* bitmap) {
+    if (!_buffer || !bitmap) return;
+    int bytesPerRow = (w + 7) / 8;
+    int displayBytesPerRow = _width / 8;
+
+    for (int row = 0; row < h; row++) {
+        int targetY = y + row;
+        if (targetY >= 0 && targetY < _height) {
+            copyShiftArray(&_buffer[targetY * displayBytesPerRow], displayBytesPerRow,
+                    &bitmap[row * bytesPerRow], bytesPerRow, x);
+        }
+    }
+}
+
+void LCDLibrary::setFont(const LCDFont* font) {
+    if (font) _font = font;
+}
+
+void LCDLibrary::setCursor(int x, int y) {
+    _cursorX = x;
+    _cursorY = y;
+}
+
+int LCDLibrary::drawGlyph(int x, int y, char c) {
+    if (!_font || c < _font->firstChar || c > _font->lastChar) return 0;
+
+    int charIndex = c - _font->firstChar;
+    int bytesPerRow = (_font->width + 7) / 8;
+    int glyphSize = bytesPerRow * _font->height;
+    const uint8_t* glyphData = _font->bitmap + (charIndex * glyphSize);
+    int displayBytesPerRow = _width / 8;
+
+    for (int row = 0; row < _font->height; row++) {
+        int targetY = y + row;
+        if (targetY >= 0 && targetY < _height) {
+            int srcRow = _font->bottomUp ? (_font->height - 1 - row) : row;
+            copyShiftArray(&_buffer[targetY * displayBytesPerRow], displayBytesPerRow,
+                    &glyphData[srcRow * bytesPerRow], bytesPerRow, x);
+        }
+    }
+    return _font->width;
+}
+
+int LCDLibrary::drawStr(int x, int y, const char* str) {
+    if (!str || !_font) return 0;
+    int curX = x;
+    for (size_t i = 0; str[i] != '\0'; i++) {
+        curX += drawGlyph(curX, y, str[i]) + _charSpacing;
+    }
+    return curX - x;
+}
+int LCDLibrary::print(const char* str) {
+    int widthDrawn = drawStr(_cursorX, _cursorY, str);
+    _cursorX += widthDrawn;
+    return widthDrawn;
 }

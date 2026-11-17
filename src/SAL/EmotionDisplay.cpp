@@ -3,12 +3,13 @@
 
 #define EYE_WITH 40
 #define EYE_HEIGHT 40
+#define EYE_RADIUS 6
 EmotionDisplay::EmotionDisplay(ApplicationController* app, int width, int height):
     m_width(width),
     m_height(height),
     m_app(app)
 {
-
+    m_lcd = new LCDLibrary(m_frameData, 128, 64);
 }
 
 void EmotionDisplay::setState(DISPLAY_STATE state)
@@ -101,13 +102,13 @@ void EmotionDisplay::displayAnimStartup()
         if(m_animFrameIndex == 30) {
             m_animFrameIndex = 0;
             m_displayState = DISPLAY_DONE;
-            LCDLibrary::clear(m_frameData,m_width,m_height);
+            m_lcd->clearBuffer();
         }
     }
         break;
     case DISPLAY_INIT:
     {
-        LCDLibrary::clear(m_frameData,m_width,m_height);
+        m_lcd->clearBuffer();
         m_displayState = DISPLAY_INPROGRESS;
         m_animFrameIndex = 0;
     }
@@ -115,16 +116,16 @@ void EmotionDisplay::displayAnimStartup()
     case DISPLAY_INPROGRESS:
     {
         if(m_animFrameIndex <= m_width - 20) {
-            LCDLibrary::drawLine(m_frameData,m_width,m_height,10,10,
+            m_lcd->drawLine(10,10,
                                  m_animFrameIndex + 10,10,2);
-            LCDLibrary::drawLine(m_frameData,m_width,m_height,m_width - m_animFrameIndex - 10,m_height - 10,
+            m_lcd->drawLine(m_width - m_animFrameIndex - 10,m_height - 10,
                                  m_width - 10,m_height - 10,2);
 
         } else if(m_animFrameIndex <= m_width + m_height - 40){
             int index = m_animFrameIndex - (m_width - 20);
-            LCDLibrary::drawLine(m_frameData,m_width,m_height,m_width - 10,10,
+            m_lcd->drawLine(m_width - 10,10,
                                  m_width - 10,10 + index,2);
-            LCDLibrary::drawLine(m_frameData,m_width,m_height,10,m_height - 10 - index,
+            m_lcd->drawLine(10,m_height - 10 - index,
                                  10,m_height - 10,2);
         }
         m_animFrameIndex ++;
@@ -149,13 +150,13 @@ void EmotionDisplay::displayAnimWakeupOpenEyes()
         if(m_animFrameIndex == 30) {
             m_animFrameIndex = 0;
             m_displayState = DISPLAY_DONE;
-            LCDLibrary::clear(m_frameData,m_width,m_height);
+            m_lcd->clearBuffer();
         }
     }
         break;
     case DISPLAY_INIT:
     {
-        LCDLibrary::clear(m_frameData,m_width,m_height);
+        m_lcd->clearBuffer();
         m_displayState = DISPLAY_INPROGRESS;
         m_animFrameIndex = 0;
     }
@@ -163,33 +164,29 @@ void EmotionDisplay::displayAnimWakeupOpenEyes()
     case DISPLAY_INPROGRESS:
     {
         if(m_animFrameIndex < EYE_HEIGHT) { // closed eyes
-            LCDLibrary::drawRect(m_frameData,m_width,m_height,
-                                 10, m_height - 8 - m_animFrameIndex,
-                                 EYE_WITH,m_animFrameIndex+1);
-            LCDLibrary::drawRect(m_frameData,m_width,m_height,
-                                 78, m_height - 8 - m_animFrameIndex,
-                                 EYE_WITH,m_animFrameIndex+1);
+            m_lcd->drawRBox(10, m_height - 12 - m_animFrameIndex/2,
+                                 EYE_WITH,m_animFrameIndex+1,EYE_RADIUS);
+            m_lcd->drawRBox(78, m_height - 12 - m_animFrameIndex/2,
+                                 EYE_WITH,m_animFrameIndex+1,EYE_RADIUS);
         } else if(m_animFrameIndex < EYE_HEIGHT + 5) { // blink
             if(m_animFrameIndex == EYE_HEIGHT) {
-                LCDLibrary::clear(m_frameData,m_width,m_height);
+                m_lcd->clearBuffer();
             }
             int index = m_animFrameIndex - EYE_HEIGHT;
-            LCDLibrary::drawRect(m_frameData,m_width,m_height,
-                                 10, m_height - 8,
-                                 EYE_WITH, 2);
-            LCDLibrary::drawRect(m_frameData,m_width,m_height,
-                                 78, m_height - 8,
-                                 EYE_WITH, 2);
+            m_lcd->drawLine(10, m_height - 12,
+                                 10+EYE_WITH, m_height - 12, 2);
+            m_lcd->drawLine(78, m_height - 12,
+                                 78+EYE_WITH, m_height - 12, 2);
         } else if(m_animFrameIndex < EYE_HEIGHT * 2 + 5) { // draw opened eyes
             if(m_animFrameIndex == EYE_HEIGHT + 5) {
-                LCDLibrary::clear(m_frameData,m_width,m_height);
+                m_lcd->clearBuffer();
             }
-            LCDLibrary::drawRect(m_frameData,m_width,m_height,
-                                 10, m_height - 8 - EYE_HEIGHT,
-                                 EYE_WITH,EYE_HEIGHT,1,true);
-            LCDLibrary::drawRect(m_frameData,m_width,m_height,
-                                 78, m_height - 8 - EYE_HEIGHT,
-                                 EYE_WITH,EYE_HEIGHT,1,true);
+            m_lcd->drawRBox(
+                                 10, m_height - 12 - EYE_HEIGHT,
+                                 EYE_WITH,EYE_HEIGHT,EYE_RADIUS);
+            m_lcd->drawRBox(
+                                 78, m_height - 12 - EYE_HEIGHT,
+                                 EYE_WITH,EYE_HEIGHT,EYE_RADIUS);
         }
         m_animFrameIndex ++;
         if(m_animFrameIndex >= EYE_HEIGHT * 2 + 5) {
@@ -213,13 +210,13 @@ void EmotionDisplay::displayAnimWakeupLookLeft()
         if(m_animFrameIndex == 30) {
             m_animFrameIndex = 0;
             m_displayState = DISPLAY_DONE;
-            LCDLibrary::clear(m_frameData,m_width,m_height);
+            m_lcd->clearBuffer();
         }
     }
         break;
     case DISPLAY_INIT:
     {
-        LCDLibrary::clear(m_frameData,m_width,m_height);
+        m_lcd->clearBuffer();
         m_displayState = DISPLAY_INPROGRESS;
         m_animFrameIndex = 0;
     }
@@ -227,32 +224,26 @@ void EmotionDisplay::displayAnimWakeupLookLeft()
     case DISPLAY_INPROGRESS:
     {
         if(m_animFrameIndex < EYE_HEIGHT) { // closed eyes
-            LCDLibrary::drawRect(m_frameData,m_width,m_height,
-                                 20, m_height - 20 - EYE_HEIGHT,
-                                 EYE_WITH, EYE_HEIGHT, 1 , true);
-            LCDLibrary::drawRect(m_frameData,m_width,m_height,
-                                 88, m_height - 20 - EYE_HEIGHT,
-                                 EYE_WITH, EYE_HEIGHT, 1 , true);
+            m_lcd->drawRBox(20, m_height - 12 - EYE_HEIGHT,
+                                 EYE_WITH, EYE_HEIGHT,EYE_RADIUS);
+            m_lcd->drawRBox(88, m_height - 12 - EYE_HEIGHT,
+                                 EYE_WITH, EYE_HEIGHT,EYE_RADIUS);
         } else if(m_animFrameIndex < EYE_HEIGHT + 5) { // blink
             if(m_animFrameIndex == EYE_HEIGHT) {
-                LCDLibrary::clear(m_frameData,m_width,m_height);
+                m_lcd->clearBuffer();
             }
-            LCDLibrary::drawRect(m_frameData,m_width,m_height,
-                                 20, m_height - 20,
-                                 EYE_WITH, 2, 1 , true);
-            LCDLibrary::drawRect(m_frameData,m_width,m_height,
-                                 88, m_height - 20,
-                                 EYE_WITH, 2, 1 , true);
+            m_lcd->drawLine(20, m_height - 12,
+                                 20+EYE_WITH, m_height - 12, 2);
+            m_lcd->drawLine(88, m_height - 12,
+                                 88+EYE_WITH, m_height - 12, 2);
         } else if(m_animFrameIndex < EYE_HEIGHT * 2 + 5) { // draw opened eyes
             if(m_animFrameIndex == EYE_HEIGHT + 5) {
-                LCDLibrary::clear(m_frameData,m_width,m_height);
+                m_lcd->clearBuffer();
             }
-            LCDLibrary::drawRect(m_frameData,m_width,m_height,
-                                 14, m_height - 20 - EYE_HEIGHT,
-                                 EYE_WITH, EYE_HEIGHT, 1 , true);
-            LCDLibrary::drawRect(m_frameData,m_width,m_height,
-                                 82, m_height - 20 - EYE_HEIGHT,
-                                 EYE_WITH, EYE_HEIGHT, 1 , true);
+            m_lcd->drawRBox(14, m_height - 12 - EYE_HEIGHT,
+                                 EYE_WITH, EYE_HEIGHT,EYE_RADIUS);
+            m_lcd->drawRBox(82, m_height - 12 - EYE_HEIGHT,
+                                 EYE_WITH, EYE_HEIGHT,EYE_RADIUS);
         }
         m_animFrameIndex ++;
         if(m_animFrameIndex >= EYE_HEIGHT * 2 + 5) {
@@ -276,13 +267,13 @@ void EmotionDisplay::displayAnimWakeupLookRight()
         if(m_animFrameIndex == 30) {
             m_animFrameIndex = 0;
             m_displayState = DISPLAY_DONE;
-            LCDLibrary::clear(m_frameData,m_width,m_height);
+            m_lcd->clearBuffer();
         }
     }
         break;
     case DISPLAY_INIT:
     {
-        LCDLibrary::clear(m_frameData,m_width,m_height);
+        m_lcd->clearBuffer();
         m_displayState = DISPLAY_INPROGRESS;
         m_animFrameIndex = 0;
     }
@@ -290,32 +281,26 @@ void EmotionDisplay::displayAnimWakeupLookRight()
     case DISPLAY_INPROGRESS:
     {
         if(m_animFrameIndex < EYE_HEIGHT) { // closed eyes
-            LCDLibrary::drawRect(m_frameData,m_width,m_height,
-                                 4, m_height - 8 - EYE_HEIGHT,
-                                 EYE_WITH, EYE_HEIGHT, 1 , true);
-            LCDLibrary::drawRect(m_frameData,m_width,m_height,
-                                 64, m_height - 8 - EYE_HEIGHT,
-                                 EYE_WITH, EYE_HEIGHT, 1 , true);
+            m_lcd->drawRBox(4, m_height - 12 - EYE_HEIGHT,
+                                 EYE_WITH, EYE_HEIGHT,EYE_RADIUS);
+            m_lcd->drawRBox(64, m_height - 12 - EYE_HEIGHT,
+                                 EYE_WITH, EYE_HEIGHT,EYE_RADIUS);
         } else if(m_animFrameIndex < EYE_HEIGHT + 5) { // blink
             if(m_animFrameIndex == EYE_HEIGHT) {
-                LCDLibrary::clear(m_frameData,m_width,m_height);
+                m_lcd->clearBuffer();
             }
-            LCDLibrary::drawRect(m_frameData,m_width,m_height,
-                                 4, m_height - 8,
-                                 EYE_WITH, 2, 1 , true);
-            LCDLibrary::drawRect(m_frameData,m_width,m_height,
-                                 64, m_height - 8,
-                                 EYE_WITH, 2, 1 , true);
+            m_lcd->drawLine(4, m_height - 12,
+                                 4+EYE_WITH, m_height - 12, 2);
+            m_lcd->drawLine(64, m_height - 12,
+                                 64+EYE_WITH, m_height - 12, 2);
         } else if(m_animFrameIndex < EYE_HEIGHT * 2 + 5) { // draw opened eyes
             if(m_animFrameIndex == EYE_HEIGHT + 5) {
-                LCDLibrary::clear(m_frameData,m_width,m_height);
+                m_lcd->clearBuffer();
             }
-            LCDLibrary::drawRect(m_frameData,m_width,m_height,
-                                 4, m_height - 8 - EYE_HEIGHT,
-                                 EYE_WITH, EYE_HEIGHT, 1 , true);
-            LCDLibrary::drawRect(m_frameData,m_width,m_height,
-                                 64, m_height - 8 - EYE_HEIGHT,
-                                 EYE_WITH, EYE_HEIGHT, 1 , true);
+            m_lcd->drawRBox(4, m_height - 12 - EYE_HEIGHT,
+                                 EYE_WITH, EYE_HEIGHT,EYE_RADIUS);
+            m_lcd->drawRBox(64, m_height - 12 - EYE_HEIGHT,
+                                 EYE_WITH, EYE_HEIGHT,EYE_RADIUS);
         }
         m_animFrameIndex ++;
         if(m_animFrameIndex >= EYE_HEIGHT * 2 + 5) {
@@ -339,35 +324,29 @@ void EmotionDisplay::displayAnimWakeupYawn()
         if(m_animFrameIndex == 30) {
             m_animFrameIndex = 0;
             m_displayState = DISPLAY_DONE;
-            LCDLibrary::clear(m_frameData,m_width,m_height);
+            m_lcd->clearBuffer();
         }
     }
         break;
     case DISPLAY_INIT:
     {
-        LCDLibrary::clear(m_frameData,m_width,m_height);
+        m_lcd->clearBuffer();
         m_displayState = DISPLAY_INPROGRESS;
         m_animFrameIndex = 0;
     }
         break;
     case DISPLAY_INPROGRESS:
     {
-        if(m_animFrameIndex < EYE_HEIGHT) { // closed eyes
-            LCDLibrary::drawRect(m_frameData,m_width,m_height,
-                                 20, m_height - 20,
-                                 EYE_WITH,m_animFrameIndex+1);
-        } else if(m_animFrameIndex < EYE_HEIGHT + 5) { // blink
-            int index = m_animFrameIndex - EYE_HEIGHT;
-            LCDLibrary::drawRect(m_frameData,m_width,m_height,
-                                 20, m_height - 20,
-                                 EYE_WITH, 7 - index);
-        } else if(m_animFrameIndex < EYE_HEIGHT * 2 + 5) { // draw opened eyes
-            LCDLibrary::drawRect(m_frameData,m_width,m_height,
-                                 20, m_height - 20,
-                                 EYE_WITH,EYE_HEIGHT);
+        if(m_animFrameIndex < EYE_HEIGHT*2) { // closed eyes
+            int shakeX = rand()%3;
+            int shakeY = rand()%3;
+            m_lcd->drawRBox(14 + shakeX, m_height - 12 - EYE_HEIGHT + shakeY,
+                                 EYE_WITH, EYE_HEIGHT/2,EYE_RADIUS);
+            m_lcd->drawRBox(74 + shakeX, m_height - 12 - EYE_HEIGHT + shakeY,
+                                 EYE_WITH, EYE_HEIGHT/2,EYE_RADIUS);
         }
         m_animFrameIndex ++;
-        if(m_animFrameIndex >= EYE_HEIGHT * 2 + 5) {
+        if(m_animFrameIndex >= EYE_HEIGHT * 2) {
             m_animFrameIndex = 0;
             m_displayState = DISPLAY_IDLE;
         }
@@ -389,7 +368,7 @@ void EmotionDisplay::displayAnimIdle()
         break;
     case DISPLAY_INIT:
     {
-        LCDLibrary::clear(m_frameData,m_width,m_height);
+        m_lcd->clearBuffer();
         m_displayState = DISPLAY_INPROGRESS;
     }
         break;
@@ -414,7 +393,7 @@ void EmotionDisplay::displayAnimHappy()
         break;
     case DISPLAY_INIT:
     {
-        LCDLibrary::clear(m_frameData,m_width,m_height);
+        m_lcd->clearBuffer();
         m_displayState = DISPLAY_INPROGRESS;
     }
         break;
@@ -439,7 +418,7 @@ void EmotionDisplay::displayAnimAngry()
         break;
     case DISPLAY_INIT:
     {
-        LCDLibrary::clear(m_frameData,m_width,m_height);
+        m_lcd->clearBuffer();
         m_displayState = DISPLAY_INPROGRESS;
     }
         break;
@@ -464,7 +443,7 @@ void EmotionDisplay::displayAnimTicled()
         break;
     case DISPLAY_INIT:
     {
-        LCDLibrary::clear(m_frameData,m_width,m_height);
+        m_lcd->clearBuffer();
         m_displayState = DISPLAY_INPROGRESS;
     }
         break;
@@ -489,7 +468,7 @@ void EmotionDisplay::displayAnimSupprised()
         break;
     case DISPLAY_INIT:
     {
-        LCDLibrary::clear(m_frameData,m_width,m_height);
+        m_lcd->clearBuffer();
         m_displayState = DISPLAY_INPROGRESS;
     }
         break;

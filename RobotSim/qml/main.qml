@@ -134,18 +134,23 @@ ApplicationWindow {
                 Rectangle {
                     anchors.fill: parent
                     radius: 42
-                    color: "#ffffff"
+                    color: "white"
                     border.color: "#cbd2df"
                     border.width: 2
                 }
 
                 // OLED Face Visor (Shifts horizontally with head yaw for 3D depth)
-                VideoRender {
-                    id: videoRender
+
+                Rectangle {
                     width: 128
                     height: 64
+                    color: "black"
                     y: (parent.height - height) / 2
                     x: (parent.width - width) / 2 + Math.sin(root.servoHead * Math.PI / 180) * 22
+                    VideoRender {
+                        id: videoRender
+                        anchors.fill: parent
+                    }
                 }
             }
         }
@@ -156,6 +161,36 @@ ApplicationWindow {
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.bottomMargin: 25
         RowLayout {
+            Button {
+                text: "Start"
+                onClicked:  mainProcess.startService();
+            }
+            Button {
+                text: "Pause"
+                onClicked:  mainProcess.pause(true);
+            }
+            Button {
+                text: "Go"
+                onClicked:  mainProcess.pause(false);
+            }
+            Slider {
+                from: -45
+                to: 45
+                onValueChanged: {
+                    root.servoHead = value
+                }
+            }
+            spacing: 10
+            Slider {
+                from: -30
+                to: 30
+                onValueChanged: {
+                    root.servoBody = value
+                }
+            }
+        }
+
+        RowLayout {
             spacing: 10
             Button {
                 text: "Center"
@@ -163,11 +198,11 @@ ApplicationWindow {
             }
             Button {
                 text: "Turn Left"
-                onClicked: root.updateServoAngles(10, 10, 30, -10)
+                onClicked: root.updateServoAngles(10, -10, 30, -10)
             }
             Button {
                 text: "Turn Right"
-                onClicked: root.updateServoAngles(-10, -10, -10, 30)
+                onClicked: root.updateServoAngles(-10, 10, -10, 30)
             }
             Button {
                 text: "Left Arm"
@@ -221,6 +256,5 @@ ApplicationWindow {
     }
     Component.onCompleted: {
         mainProcess.setRender(videoRender);
-        mainProcess.startService();
     }
 }

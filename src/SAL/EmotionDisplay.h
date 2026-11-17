@@ -3,6 +3,7 @@
 #include "StdTypes.h"
 
 class ApplicationController;
+class LCDLibrary;
 class EmotionDisplay
 {
 public:
@@ -28,6 +29,7 @@ private:
     void displayAnimSupprised();
 
     unsigned char m_frameData[9600]; // 320x240 bit
+    LCDLibrary* m_lcd;
     int m_width;
     int m_height;
     DisplayParam m_currentParam;
