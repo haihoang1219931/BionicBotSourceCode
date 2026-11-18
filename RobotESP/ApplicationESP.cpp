@@ -152,7 +152,6 @@ void ApplicationESP::enableMotor(MOTOR motorID, bool enable) {
 void ApplicationESP::setMotorAngle(MOTOR motorID, int angle) {
     int idx = static_cast<int>(motorID);
     if (idx < 0 || idx >= static_cast<int>(MAX_MOTOR)) return;
-    ESP_LOGI(TAG, "Motor %d -> %d deg", (int)motorID, angle);
     ledc_channel_t channel = static_cast<ledc_channel_t>(idx);
     uint32_t duty = angleToDuty(angle);
     ledc_set_duty(SERVO_LEDC_MODE, channel, duty);

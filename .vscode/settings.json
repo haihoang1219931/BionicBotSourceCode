@@ -26,14 +26,14 @@
     "idf.port": "detect",
     "idf.currentSetup": "D:\\ESP\\v6.1\\esp-idf",
     "idf.customExtraVars": {
-        "IDF_TARGET": "esp32"
+        "IDF_TARGET": "esp32s3"
     },
     "idf.flashType": "UART",
     "clangd.path": "D:\\ESP\\v6.1\\tools\\esp-clangd\\esp-21.1.3_20260408\\esp-clangd\\bin\\clangd.exe",
     "clangd.arguments": [
         "--background-index",
         "--query-driver=**",
-        "--compile-commands-dir=${workspaceFolder}\\RobotESP\\build"
+        "--compile-commands-dir=d:\\BionicBotSourceCode\\build"
     ],
     "idf.projectPath": "${workspaceFolder}/RobotESP",
     "cmake.sourceDirectory": "${workspaceFolder}/RobotESP"

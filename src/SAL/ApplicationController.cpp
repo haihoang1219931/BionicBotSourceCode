@@ -170,7 +170,7 @@ EMOTION_STATE ApplicationController::emotionWakeupLookLeftTask() {
         m_emotionState = EMOTION_TASK_PENDING;
         m_emotionDisplay->initEmotion(EMOTION_WAKEUP_LOOK_LEFT);
         m_motionList[MOTOR_HEAD]->setTarget(10,2);
-        m_motionList[MOTOR_ARM_LEFT]->setTarget(90,2);
+        m_motionList[MOTOR_ARM_LEFT]->setTarget(30,2);
         m_motionList[MOTOR_ARM_RIGHT]->setTarget(-30,2);
         m_motionList[MOTOR_BODY]->setTarget(10,2);
     }
@@ -203,7 +203,7 @@ EMOTION_STATE ApplicationController::emotionWakeupLookRightTask() {
         m_emotionDisplay->initEmotion(EMOTION_WAKEUP_LOOK_RIGHT);
         m_motionList[MOTOR_HEAD]->setTarget(-10,2);
         m_motionList[MOTOR_ARM_LEFT]->setTarget(-30,2);
-        m_motionList[MOTOR_ARM_RIGHT]->setTarget(90,2);
+        m_motionList[MOTOR_ARM_RIGHT]->setTarget(30,2);
         m_motionList[MOTOR_BODY]->setTarget(-10,2);
     }
         break;
@@ -234,8 +234,8 @@ EMOTION_STATE ApplicationController::emotionWakeupYawnTask() {
         m_emotionState = EMOTION_TASK_PENDING;
         m_emotionDisplay->initEmotion(EMOTION_WAKEUP_YAWN);
         m_motionList[MOTOR_HEAD]->setTarget(0,2);
-        m_motionList[MOTOR_ARM_LEFT]->setTarget(120,2);
-        m_motionList[MOTOR_ARM_RIGHT]->setTarget(120,2);
+        m_motionList[MOTOR_ARM_LEFT]->setTarget(90,2);
+        m_motionList[MOTOR_ARM_RIGHT]->setTarget(90,2);
         m_motionList[MOTOR_BODY]->setTarget(0,2);
     }
         break;
