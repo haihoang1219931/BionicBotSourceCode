@@ -15,7 +15,8 @@ if(CMAKE_SCRIPT_MODE_FILE OR ROBOT_ESP_PROJECT_DEFINED)
             "."
             "../src/SAL"
         REQUIRES 
-            driver 
+            driver
+            esp_driver_ledc
             esp_lcd 
             esp_timer
     )

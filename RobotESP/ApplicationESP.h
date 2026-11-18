@@ -4,6 +4,7 @@
 #include "ApplicationController.h"
 #include "driver/gpio.h"
 #include "driver/i2c_master.h"
+#include "driver/ledc.h"
 #include "esp_lcd_panel_ops.h"
 #include "esp_timer.h"
 #include <cstdint>
@@ -30,7 +31,9 @@ public:
 
 private:
     void initOled();
+    void initServos();
     void initTimer60Hz();
+    uint32_t angleToDuty(int angle) const;
     static void onTimer60Hz(void *arg);
 
     i2c_port_num_t m_i2cPort;

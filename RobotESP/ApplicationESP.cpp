@@ -7,11 +7,36 @@
 #include <cstdarg>
 #include <cstdio>
 #include <cstring>
+#include <math.h>
+#ifndef max
+#define max(a, b) (((a) > (b)) ? (a) : (b))
+#endif
 
+#ifndef min
+#define min(a, b) (((a) < (b)) ? (a) : (b))
+#endif
 static const char *TAG = "ApplicationESP";
 constexpr uint32_t I2C_CLK_HZ = 800000;
 constexpr uint64_t TIMER_60HZ_US = 16667; // 60 Hz = 16.667 ms
 
+// Servo LEDC PWM Settings (50 Hz, 14-bit resolution)
+constexpr ledc_mode_t SERVO_LEDC_MODE        = LEDC_LOW_SPEED_MODE;
+constexpr ledc_timer_t SERVO_LEDC_TIMER      = LEDC_TIMER_0;
+constexpr ledc_timer_bit_t SERVO_DUTY_RES    = LEDC_TIMER_14_BIT;
+constexpr uint32_t SERVO_FREQ_HZ             = 50;
+constexpr uint32_t SERVO_MAX_DUTY            = (1 << 14) - 1; // 16383
+constexpr uint32_t SERVO_PERIOD_US           = 20000;         // 20 ms
+constexpr int SERVO_MIN_PULSE_US             = 500;
+constexpr int SERVO_CENTER_PULSE_US          = 1500;
+constexpr int SERVO_MAX_PULSE_US             = 2500;
+
+// Change these GPIOs to match your ESP32-S3 servo wiring
+constexpr gpio_num_t SERVO_PINS[MAX_MOTOR] = {
+    GPIO_NUM_11, // MOTOR_HEAD
+    GPIO_NUM_13, // MOTOR_ARM_LEFT
+    GPIO_NUM_14, // MOTOR_ARM_RIGHT
+    GPIO_NUM_12  // MOTOR_BODY
+};
 ApplicationESP::ApplicationESP(i2c_port_num_t i2cPort,
                                gpio_num_t sdaPin,
                                gpio_num_t sclPin,
@@ -34,6 +59,7 @@ ApplicationESP::~ApplicationESP() {
 
 void ApplicationESP::initRobot() {
     initOled();
+    initServos();
     initTimer60Hz();
     this->printf("Robot initialized with independent %dHz OLED timer",60);
 }
@@ -75,6 +101,62 @@ void ApplicationESP::initOled() {
     }
 
     ESP_ERROR_CHECK(esp_lcd_panel_disp_on_off(m_panelHandle, true));
+}
+
+void ApplicationESP::initServos() {
+    // 1. Configure shared 50 Hz LEDC timer
+    ledc_timer_config_t timer_conf = {};
+    timer_conf.speed_mode      = SERVO_LEDC_MODE;
+    timer_conf.duty_resolution = SERVO_DUTY_RES;
+    timer_conf.timer_num       = SERVO_LEDC_TIMER;
+    timer_conf.freq_hz         = SERVO_FREQ_HZ;
+    timer_conf.clk_cfg         = LEDC_AUTO_CLK;
+    ESP_ERROR_CHECK(ledc_timer_config(&timer_conf));
+
+    // 2. Configure one LEDC channel per motor, starting at 0 deg (1500 us center)
+    uint32_t centerDuty = angleToDuty(0);
+    for (int i = 0; i < static_cast<int>(MAX_MOTOR); i++) {
+        ledc_channel_config_t ch_conf = {};
+        ch_conf.gpio_num   = SERVO_PINS[i];
+        ch_conf.speed_mode = SERVO_LEDC_MODE;
+        ch_conf.channel    = static_cast<ledc_channel_t>(i);
+        ch_conf.intr_type  = LEDC_INTR_DISABLE;
+        ch_conf.timer_sel  = SERVO_LEDC_TIMER;
+        ch_conf.duty       = centerDuty;
+        ch_conf.hpoint     = 0;
+        ESP_ERROR_CHECK(ledc_channel_config(&ch_conf));
+    }
+}
+
+uint32_t ApplicationESP::angleToDuty(int angle) const {
+    // Map signed angle (0 deg = 1500 us, -90 deg = 500 us, +90 deg = 2500 us)
+    int pulseUs = SERVO_CENTER_PULSE_US + (angle * 1000) / 90;
+    pulseUs = max(SERVO_MIN_PULSE_US, min(pulseUs, SERVO_MAX_PULSE_US));
+    return (static_cast<uint32_t>(pulseUs) * SERVO_MAX_DUTY) / SERVO_PERIOD_US;
+}
+
+void ApplicationESP::enableMotor(MOTOR motorID, bool enable) {
+    int idx = static_cast<int>(motorID);
+    if (idx < 0 || idx >= static_cast<int>(MAX_MOTOR)) return;
+
+    ledc_channel_t channel = static_cast<ledc_channel_t>(idx);
+
+    if (enable) {
+    } else {
+        // 0% duty stops PWM pulses so hobby servos relax / stop holding torque
+        ledc_set_duty(SERVO_LEDC_MODE, channel, 0);
+        ledc_update_duty(SERVO_LEDC_MODE, channel);
+    }
+}
+
+void ApplicationESP::setMotorAngle(MOTOR motorID, int angle) {
+    int idx = static_cast<int>(motorID);
+    if (idx < 0 || idx >= static_cast<int>(MAX_MOTOR)) return;
+    ESP_LOGI(TAG, "Motor %d -> %d deg", (int)motorID, angle);
+    ledc_channel_t channel = static_cast<ledc_channel_t>(idx);
+    uint32_t duty = angleToDuty(angle);
+    ledc_set_duty(SERVO_LEDC_MODE, channel, duty);
+    ledc_update_duty(SERVO_LEDC_MODE, channel);
 }
 
 void ApplicationESP::initTimer60Hz() {
@@ -174,14 +256,4 @@ void ApplicationESP::enableHardwareTimer(bool enable) {
             esp_timer_stop(m_timer60Hz);
         }
     }
-}
-
-void ApplicationESP::enableMotor(MOTOR motorID, bool enable) {
-    (void)motorID;
-    (void)enable;
-}
-
-void ApplicationESP::setMotorAngle(MOTOR motorID, int angle) {
-    (void)motorID;
-    (void)angle;
 }
